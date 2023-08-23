@@ -1,84 +1,40 @@
-# SimpleTelnetClient
-This simple telnet client is based on boost c++ library. Also it uses Boost.Asio and lambda function. 
+Library is from [SimpleTelnetClient GitHub](https://github.com/kmansoo/SimpleTelnetClient).
 
-# How to build
-##1. Windows
-   SimpleTelnetClient has a solution file for Visual Studio 2015, so you can build very easy.
+# Prerequiste
 
-##2. Linux
-###  Preparation
-  You need to build and install the boost c++ library before you try to build this project.
+You must install [Boost](https://www.boost.org/doc/libs/1_83_0/more/getting_started/windows.html) before compiling the code.
 
-###  Build Steps
-```bash
-mkdir build
-cd build
-cmake ..
-make
-```
+Follow point **5.1** to build boost.
 
-# Example
-```C++
-#include <iostream>
+You must have a folder named bin.v2 in your Boost root folder at the end.
 
-#include "impl/AsioTelnetClient.h"
+# Configure the Visual Studio project
 
-int main(int argc, char* argv[])
-{
-    std::string dest_ip;
-    std::string dest_port;
+Open the Visual Studio solution. Open project properties.
 
-    if (argc != 3)
-    {
-        std::cerr << "Usage: telnet <host> <port>\n";
-        return 1;
-    }
-    else
-    {
-        dest_ip = argv[1];
-        dest_port = argv[2];
-    }
+## Link to include directory
 
-    try
-    {
-        std::cout << "SimpleTelnetClient is tring to connect " << dest_ip << ":" << dest_port << std::endl;
+In "C/C++ > General > Additional Include Directories", add the path to your Boost root.
 
-        boost::asio::io_service io_service;
+## Link to lib directory
 
-        // resolve the host name and port number to an iterator that can be used to connect to the server
-        tcp::resolver resolver(io_service);
-        tcp::resolver::query query(dest_ip, dest_port);
-        tcp::resolver::iterator iterator = resolver.resolve(query);
-        // define an instance of the main class of this program
+Create a directory named dependency and put in it the following file :
 
-        AsioTelnetClient telnet_client(io_service, iterator);
+- libboost_chrono-vc143-mt-gd-x64-1_82.lib
+- libboost_thread-vc143-mt-gd-x64-1_82.lib
 
-        // set a callback lambda function to process a message when it's received from telnet server.
-        telnet_client.setReceivedSocketCallback([](const std::string& message) {
-            std::cout << message;
-        });
+They can be respectively found in *"boost root/bin.v2/libs/chrono/build/msvc-14.3/debug/link-static/threading-multi"* and *"boost root/bin.v2/libs/thread/build/msvc-14.3/debug/link-static/threadapi-win32/threading-multi"*
 
-        // set a callback lambda function to realize an socket problem event.
-        telnet_client.setClosedSocketCallback([]() {
-            std::cout << " # disconnected" << std::endl;
-        });
+Back in project properties, under "Linker > General > Additional Library Directories", add the path to the newly created dependency directory.
 
-        while (1)
-        {
-            char ch;
-            std::cin.get(ch); // blocking wait for standard input
+# Usage
 
-            if (ch == 3) // ctrl-C to end program
-                break;
+To execute the program, type in a terminal : **.\simpletelnetclient.exe ip port**.
 
-            telnet_client.write(ch);
-        }
-    }
-    catch (std::exception& e)
-    {
-        std::cerr << "Exception: " << e.what() << "\n";
-    }
+If *ip* and *port* are not defined, default are:
+- IP: 127.0.0.1
+- port: 9105
 
-    return 0;
-}
-```
+That correspond to the K-ROSET virtual controller.
+
+Then, the program will loop asking you a position (X, Y, Z, O, A, T) and move the robot to it.

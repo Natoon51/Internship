@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "impl/AsioTelnetClient.h"
+#include <format>
 
 #ifdef POSIX
 #include <termios.h>
@@ -25,8 +26,8 @@ int main(int argc, char* argv[])
     if (argc != 3)
     {
 #ifdef WIN32
-        dest_ip = "192.168.0.2";
-        dest_port = "23";
+        dest_ip = "127.0.0.1";
+        dest_port = "9105";
 #else
         std::cerr << "Usage: telnet <host> <port>\n";
         return 1;
@@ -40,7 +41,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        std::cout << "SimpleTelnetClient is tring to connect " << dest_ip << ":" << dest_port << std::endl;
+        std::cout << "Trying to connect " << dest_ip << ":" << dest_port << std::endl;
 
         boost::asio::io_service io_service;
 
@@ -53,22 +54,41 @@ int main(int argc, char* argv[])
         AsioTelnetClient telnet_client(io_service, iterator);
 
         telnet_client.setReceivedSocketCallback([](const std::string& message) {
-            std::cout << message;
+            //std::cout << message;
         });
 
         telnet_client.setClosedSocketCallback([]() {
             std::cout << " # disconnected" << std::endl;
         });
 
+        int x = 0, y = 0, z = 0;
+        int o = 0, a = 0, t = 0;
+        std::string cmd;
+
+        telnet_client.write("as\n");
+
         while (1)
         {
-            char ch;
-            std::cin.get(ch); // blocking wait for standard input
+            std::cout << "X: ";
+            std::cin >> x;
 
-            if (ch == 3) // ctrl-C to end program
-                break;
+            std::cout << "Y: ";
+            std::cin >> y;
 
-            telnet_client.write(ch);
+            std::cout << "Z: ";
+            std::cin >> z;
+
+            std::cout << "O: ";
+            std::cin >> o;
+
+            std::cout << "A: ";
+            std::cin >> a;
+
+            std::cout << "T: ";
+            std::cin >> t;
+
+            cmd = std::format("do lmove trans({}, {}, {}, {}, {}, {})\n", x, y, z, o, a, t);
+            telnet_client.write(cmd);
         }
     }
     catch (std::exception& e)
